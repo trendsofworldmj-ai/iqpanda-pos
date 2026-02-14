@@ -2,6 +2,7 @@
   "name": "iqpanda-pos",
   "version": "1.0.0",
   "description": "Sistema de Punto de Venta Inteligente para Fruterías",
+  "type": "module",
   "main": "src/main/index.ts",
   "scripts": {
     "dev": "vite",
