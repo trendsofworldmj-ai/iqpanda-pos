@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  fullName  String
+  role      String   @default("CASHIER")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sales     Sale[]
+  auditLogs AuditLog[]
+  
+  @@index([username])
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  name            String
+  category        String
+  sku             String?  @unique
+  barcode         String?  @unique
+  unitPrice       Float
+  costPrice       Float?
+  unitType        String   @default("KG")
+  stock           Float    @default(0)
+  minStock        Float    @default(0)
+  maxStock        Float?
+  isActive        Boolean  @default(true)
+  requiresWeight  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  saleItems       SaleItem[]
+  inventory       InventoryMovement[]
+  
+  @@index([category])
+  @@index([name])
+  @@index([barcode])
+}
+
+model Sale {
+  id              String   @id @default(uuid())
+  ticketNumber    String   @unique
+  date            DateTime @default(now())
+  subtotal        Float
+  tax             Float    @default(0)
+  total           Float
+  paymentMethod   String
+  cashReceived    Float?
+  changeGiven     Float?
+  status          String   @default("COMPLETED")
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  items           SaleItem[]
+  
+  @@index([date])
+  @@index([userId])
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  quantity  Float
+  unitPrice Float
+  subtotal  Float
+  total     Float
+  weight    Float?
+  
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  
+  @@index([saleId])
+}
+
+model InventoryMovement {
+  id        String   @id @default(uuid())
+  type      String
+  quantity  Float
+  date      DateTime @default(now())
+  reason    String?
+  
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  
+  @@index([productId])
+  @@index([date])
+}
+
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  
+  @@index([key])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entityId  String?
+  changes   String?
+  timestamp DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([timestamp])
+}
